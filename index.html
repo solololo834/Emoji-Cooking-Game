@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Emoji Cooking Game</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      transition: transform 0.1s ease;
+    }
+    .ingredients {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .emoji {
+      font-size: 40px;
+      cursor: grab;
+    }
+    .dropzone {
+      margin-top: 30px;
+      height: 100px;
+      width: 100px;
+      border: 2px dashed #ccc;
+      font-size: 40px;
+      line-height: 100px;
+      margin: 0 auto;
+    }
+    #message {
+      font-size: 30px;
+      color: red;
+      margin-top: 20px;
+    }
+    #progress {
+      margin-top: 20px;
+      width: 300px;
+      height: 20px;
+      background: #ddd;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: green;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="level-title">Level 1: Make a 🌮</h1>
+  <p>Drag the correct ingredients into the box!</p>
+
+  <div class="ingredients" id="ingredient-container"></div>
+
+  <div class="dropzone" id="dropzone">⬛</div>
+
+  <div id="message"></div>
+
+  <div id="progress">
+    <div id="progress-bar"></div>
+  </div>
+
+  <script>
+    const allIngredients = ["🧀", "🥔", "🥩", "🥒", "🥗", "🫑", "🐟", "🍅"];
+    const recipes = [
+      { name: "🌮", ingredients: ["🥩", "🥗"] },
+      { name: "🌯", ingredients: ["🥩", "🧀", "🫑"] },
+      { name: "🍕", ingredients: ["🧀", "🍅", "🫑"] },
+      { name: "🍟", ingredients: ["🥔"] },
+      { name: "🌭", ingredients: ["🥩", "🧀"] }
+    ];
+
+    let currentLevel = 0;
+    let added = [];
+
+    const levelTitle = document.getElementById("level-title");
+    const ingredientContainer = document.getElementById("ingredient-container");
+    const dropzone = document.getElementById("dropzone");
+    const message = document.getElementById("message");
+    const progressBar = document.getElementById("progress-bar");
+
+    function startLevel() {
+      added = [];
+      const level = recipes[currentLevel];
+      levelTitle.textContent = `Level ${currentLevel + 1}: Make a ${level.name}`;
+      dropzone.textContent = "⬛";
+      message.textContent = "";
+      progressBar.style.width = "0%";
+
+      ingredientContainer.innerHTML = "";
+      allIngredients.forEach(ingredient => {
+        const div = document.createElement("div");
+        div.className = "emoji";
+        div.draggable = true;
+        div.dataset.ingredient = ingredient;
+        div.textContent = ingredient;
+        ingredientContainer.appendChild(div);
+        div.addEventListener("dragstart", e => {
+          e.dataTransfer.setData("text/plain", ingredient);
+        });
+      });
+    }
+
+    dropzone.addEventListener("dragover", e => e.preventDefault());
+
+    dropzone.addEventListener("drop", e => {
+      e.preventDefault();
+      const ingredient = e.dataTransfer.getData("text/plain");
+      const level = recipes[currentLevel];
+
+      if (level.ingredients.includes(ingredient) && !added.includes(ingredient)) {
+        added.push(ingredient);
+        document.querySelector(`.emoji[data-ingredient="${ingredient}"]`)?.remove();
+        updateProgress();
+        if (added.length === level.ingredients.length) {
+          if (currentLevel + 1 < recipes.length) {
+            setTimeout(() => {
+              currentLevel++;
+              startLevel();
+            }, 1000);
+          } else {
+            setTimeout(() => {
+              document.body.innerHTML = "<h1>🎉 Congratulations on finishing this game! 🎉</h1>";
+            }, 1000);
+          }
+        }
+      } else {
+        wrongEffect();
+      }
+    });
+
+    function updateProgress() {
+      const percent = (added.length / recipes[currentLevel].ingredients.length) * 100;
+      progressBar.style.width = percent + "%";
+    }
+
+    function wrongEffect() {
+      message.textContent = "❌ Wrong ingredient!";
+      document.body.style.transform = "translateX(-5px)";
+      setTimeout(() => {
+        document.body.style.transform = "translateX(5px)";
+      }, 100);
+      setTimeout(() => {
+        message.textContent = "";
+        document.body.style.transform = "none";
+      }, 2000);
+    }
+
+    startLevel();
+  </script>
+</body>
+    </html>
